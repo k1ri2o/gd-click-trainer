@@ -1,0 +1,359 @@
+{
+	"geode": "5.10.1",
+	"gd": {
+		"win": "2.2081"
+	},
+	"id": "lmati.click-trainer",
+	"name": "Click Trainer",
+	"version": "v0.1.0",
+	"developer": "lmati",
+	"description": "Learn a level's clicks: see exactly where and when to click, right on the level, from your own run or a bot macro.",
+	"tags": [
+		"gameplay",
+		"utility",
+		"cheat"
+	],
+	"dependencies": {
+		"geode.node-ids": ">=v1.18.0",
+		"eclipse.eclipse-menu": {
+			"version": ">=v1.9.0",
+			"required": false
+		}
+	},
+	"settings": {
+		"enabled": {
+			"type": "bool",
+			"default": true,
+			"name": "Enabled",
+			"description": "Show the click guide when the level has a chart. Toggle in-game with the hotkey below or the Clicks pause menu."
+		},
+		"toggle-key": {
+			"type": "keybind",
+			"default": "Alt+C",
+			"name": "On/Off Hotkey",
+			"category": "gameplay",
+			"description": "Turns the click guide on or off."
+		},
+		"style-key": {
+			"type": "keybind",
+			"default": "Alt+V",
+			"name": "Switch View Hotkey",
+			"category": "gameplay",
+			"description": "Cycles the views: Gates, Target Rings, Click Track."
+		},
+		"view": {
+			"type": "string",
+			"default": "Gates",
+			"name": "View",
+			"description": "<cg>Gates</c>: a thin line in the level where you click and a thin needle through your icon; click when the needle crosses the gate. <cy>Target Rings</c>: a ring closing onto a circle. <co>Click Track</c>: a strip at the screen edge. <cr>Side Lane</c>: osu!mania lane. Switch in-game with the hotkey below.",
+			"one-of": [
+				"Gates",
+				"Target Rings",
+				"Click Track",
+				"Side Lane"
+			]
+		},
+		"practice-only": {
+			"type": "bool",
+			"default": false,
+			"name": "Practice Mode Only",
+			"description": "Only show the guide in practice mode."
+		},
+		"gates-title": {
+			"type": "title",
+			"name": "Gates"
+		},
+		"gate-anchor": {
+			"type": "string",
+			"default": "Icon Center",
+			"name": "Gate Lines Up With",
+			"description": "<cg>Icon Center</c>: click when the needle through your icon crosses the gate. <cy>Icon Front</c>: click when your icon's front edge touches the gate.",
+			"one-of": [
+				"Icon Center",
+				"Icon Front"
+			]
+		},
+		"rings-title": {
+			"type": "title",
+			"name": "Target Rings & Sizes"
+		},
+		"ring-anchor": {
+			"type": "string",
+			"default": "Click Spot",
+			"name": "Ring Closes On",
+			"description": "<cg>Click Spot</c>: the ring closes onto the ghost target in the level. <cy>Your Icon</c>: the ring closes around your icon, so you never have to look away from it.",
+			"one-of": [
+				"Click Spot",
+				"Your Icon"
+			]
+		},
+		"clicks-ahead": {
+			"type": "int",
+			"default": 2,
+			"min": 1,
+			"max": 6,
+			"name": "Clicks Shown Ahead",
+			"description": "Only the next few clicks are shown, to keep the level clear. Only the very next one gets a ring."
+		},
+		"target-size": {
+			"type": "int",
+			"default": 100,
+			"min": 50,
+			"max": 200,
+			"name": "Circle / Gate Size (%)",
+			"description": "Size of the target circle compared to your icon."
+		},
+		"release-size": {
+			"type": "int",
+			"default": 35,
+			"min": 10,
+			"max": 100,
+			"name": "Release Circle / Gate Size (%)",
+			"description": "Size of the orange 'let go' circles compared to the click circles."
+		},
+		"track-title": {
+			"type": "title",
+			"name": "Click Track"
+		},
+		"track-position": {
+			"type": "string",
+			"default": "Bottom",
+			"name": "Track Position",
+			"one-of": [
+				"Bottom",
+				"Top"
+			]
+		},
+		"track-height": {
+			"type": "int",
+			"default": 28,
+			"min": 14,
+			"max": 70,
+			"name": "Track Height"
+		},
+		"track-opacity": {
+			"type": "int",
+			"default": 60,
+			"min": 0,
+			"max": 100,
+			"name": "Track Background Opacity (%)",
+			"control": {
+				"slider": true,
+				"slider-step": 5,
+				"input": true
+			}
+		},
+		"guide-line": {
+			"type": "bool",
+			"default": true,
+			"name": "Guide Line",
+			"description": "Right before a click, a thin line rises from the mark to the exact spot in the level where your icon will be."
+		},
+		"level-title": {
+			"type": "title",
+			"name": "Markers & Timing"
+		},
+		"approach-time": {
+			"type": "int",
+			"default": 800,
+			"min": 200,
+			"max": 2000,
+			"name": "Ring Closing Time (ms)",
+			"description": "How long the ring takes to close onto the circle. Higher = more warning, slower and easier to read.",
+			"control": {
+				"slider": true,
+				"slider-step": 50,
+				"input": true,
+				"arrows": true,
+				"arrow-step": 50
+			}
+		},
+		"look-ahead": {
+			"type": "int",
+			"default": 2500,
+			"min": 500,
+			"max": 6000,
+			"name": "Look Ahead (ms)",
+			"description": "How far ahead the route and click markers are shown.",
+			"control": {
+				"slider": true,
+				"slider-step": 250,
+				"input": true,
+				"arrows": true,
+				"arrow-step": 250
+			}
+		},
+		"marker-opacity": {
+			"type": "int",
+			"default": 90,
+			"min": 20,
+			"max": 100,
+			"name": "Target / Mark Opacity (%)",
+			"control": {
+				"slider": true,
+				"slider-step": 5,
+				"input": true
+			}
+		},
+		"ring-opacity": {
+			"type": "int",
+			"default": 100,
+			"min": 20,
+			"max": 100,
+			"name": "Approach Ring Opacity (%)",
+			"control": {
+				"slider": true,
+				"slider-step": 5,
+				"input": true
+			}
+		},
+		"trail-opacity": {
+			"type": "int",
+			"default": 25,
+			"min": 0,
+			"max": 100,
+			"name": "Trail Opacity (%)",
+			"description": "The line showing the route ahead. 0 hides it.",
+			"control": {
+				"slider": true,
+				"slider-step": 5,
+				"input": true
+			}
+		},
+		"outline": {
+			"type": "bool",
+			"default": true,
+			"name": "Dark Outline",
+			"description": "Draws a dark edge around the trail, dots and rings so they stay visible on bright and dark backgrounds alike."
+		},
+		"colors-title": {
+			"type": "title",
+			"name": "Colors"
+		},
+		"ring-color": {
+			"type": "rgb",
+			"default": "#ffffff",
+			"name": "Approach Ring Color",
+			"description": "Color of the closing ring. It stays this color the whole way in."
+		},
+		"ring-hit-color": {
+			"type": "rgb",
+			"default": "#3dff5a",
+			"name": "Flash Color (click now)",
+			"description": "Flashes in this color at the exact moment to click or let go. Nothing changes color before that."
+		},
+		"p1-color": {
+			"type": "rgb",
+			"default": "#33e6ff",
+			"name": "Click Dot / Hold Color"
+		},
+		"p2-color": {
+			"type": "rgb",
+			"default": "#ff73bf",
+			"name": "Player 2 Color"
+		},
+		"release-color": {
+			"type": "rgb",
+			"default": "#ff8c26",
+			"name": "Release Color"
+		},
+		"trail-color": {
+			"type": "rgb",
+			"default": "#ffffff",
+			"name": "Trail Color"
+		},
+		"lane-title": {
+			"type": "title",
+			"name": "Side Lane"
+		},
+		"position": {
+			"type": "string",
+			"default": "Right",
+			"name": "Lane Position",
+			"one-of": [
+				"Left",
+				"Center",
+				"Right"
+			]
+		},
+		"note-speed": {
+			"type": "int",
+			"default": 120,
+			"min": 20,
+			"max": 1500,
+			"name": "Note Speed",
+			"description": "How fast notes fall, in pixels per second. Low = slow and easy to read (you see clicks ~2 s ahead at 120). High = osu!mania-style fast.",
+			"control": {
+				"slider": true,
+				"slider-step": 10,
+				"input": true,
+				"arrows": true,
+				"arrow-step": 10
+			}
+		},
+		"lane-width": {
+			"type": "int",
+			"default": 42,
+			"min": 20,
+			"max": 100,
+			"name": "Lane Width"
+		},
+		"hit-line-y": {
+			"type": "int",
+			"default": 60,
+			"min": 10,
+			"max": 250,
+			"name": "Hit Line Height",
+			"description": "Distance of the hit line from the bottom of the screen."
+		},
+		"lane-opacity": {
+			"type": "int",
+			"default": 60,
+			"min": 0,
+			"max": 100,
+			"name": "Lane Background Opacity (%)"
+		},
+		"timing-title": {
+			"type": "title",
+			"name": "Timing"
+		},
+		"offset-ticks": {
+			"type": "int",
+			"default": 0,
+			"min": -24,
+			"max": 24,
+			"name": "Chart Offset (ticks)",
+			"description": "Shift the whole chart. 1 tick = 1/240 s (~4.2 ms). Use this if imported macros feel consistently early or late."
+		},
+		"visual-offset": {
+			"type": "int",
+			"default": 0,
+			"min": -150,
+			"max": 150,
+			"name": "Visual Offset (ms)",
+			"description": "Makes the rings/marks arrive earlier (+) or later (-) without changing the judgement. Use <cy>Calibrate</c> in the Clicks menu to set it from your average timing.",
+			"control": {
+				"slider": true,
+				"slider-step": 5,
+				"input": true,
+				"arrows": true,
+				"arrow-step": 5
+			}
+		},
+		"hold-threshold": {
+			"type": "int",
+			"default": 12,
+			"min": 1,
+			"max": 120,
+			"name": "Hold Note Threshold (ticks)",
+			"description": "Presses held longer than this are shown as hold notes with a release marker."
+		},
+		"show-judgements": {
+			"type": "bool",
+			"default": true,
+			"name": "Show Judgements",
+			"description": "Show PERFECT / GREAT / MISS etc. and your timing error."
+		}
+	},
+	"resources": {}
+}
