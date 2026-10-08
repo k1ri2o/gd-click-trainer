@@ -5,7 +5,7 @@
 	},
 	"id": "lmati.click-trainer",
 	"name": "Click Trainer",
-	"version": "v0.1.0",
+	"version": "v0.2.0",
 	"developer": "lmati",
 	"description": "Learn a level's clicks: see exactly where and when to click, right on the level, from your own run or a bot macro.",
 	"tags": [
