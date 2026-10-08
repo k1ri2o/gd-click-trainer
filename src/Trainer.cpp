@@ -57,6 +57,9 @@ TrainerSettings TrainerSettings::load() {
     s.holdThreshold = static_cast<int>(mod->getSettingValue<int64_t>("hold-threshold")) * 2;
     s.showJudgements = mod->getSettingValue<bool>("show-judgements");
     s.visualOffsetTicks = static_cast<int64_t>(mod->getSettingValue<int64_t>("visual-offset") * kTicksPerSecond / 1000);
+    s.clickSound = mod->getSettingValue<bool>("click-sound");
+    s.clickVolume = mod->getSettingValue<int64_t>("click-volume") / 100.f;
+    s.clickOffsetMs = static_cast<int>(mod->getSettingValue<int64_t>("click-offset"));
     return s;
 }
 
@@ -73,6 +76,53 @@ Judgement gradeFor(int64_t diff) {
     if (d <= kGreatWindow) return Judgement::Great;
     if (d <= kGoodWindow) return Judgement::Good;
     return Judgement::Ok;
+}
+
+namespace {
+    FMOD::Sound* clickSound() {
+        static FMOD::Sound* sound = nullptr;
+        if (!sound) {
+            auto path = utils::string::pathToString(Mod::get()->getResourcesDir() / "click.wav");
+            FMODAudioEngine::sharedEngine()->m_system->createSound(path.c_str(), FMOD_DEFAULT, nullptr, &sound);
+        }
+        return sound;
+    }
+
+    int mixRate() {
+        int rate = 0;
+        FMODAudioEngine::sharedEngine()->m_system->getSoftwareFormat(&rate, nullptr, nullptr);
+        return rate > 0 ? rate : 48000;
+    }
+
+    // How far ahead of the speakers FMOD mixes, in seconds.
+    double mixLatency() {
+        static double latency = -1.0;
+        if (latency < 0.0) {
+            unsigned int length = 0;
+            int count = 0;
+            FMODAudioEngine::sharedEngine()->m_system->getDSPBufferSize(&length, &count);
+            latency = static_cast<double>(length) * count / mixRate();
+        }
+        return latency;
+    }
+
+    // Played straight through FMOD rather than playEffect, so the volume can go above 1
+    // (FMOD amplifies past 1.0) and the start can be scheduled to the exact sample.
+    FMOD::Channel* playClick(float volume, double delay) {
+        auto sound = clickSound();
+        if (!sound) return nullptr;
+        FMOD::Channel* channel = nullptr;
+        auto system = FMODAudioEngine::sharedEngine()->m_system;
+        if (system->playSound(sound, nullptr, true, &channel) != FMOD_OK || !channel) return nullptr;
+        channel->setVolume(volume);
+        if (delay > 0.0) {
+            unsigned long long clock = 0;
+            channel->getDSPClock(nullptr, &clock);
+            channel->setDelay(clock + static_cast<unsigned long long>(delay * mixRate()), 0, false);
+        }
+        channel->setPaused(false);
+        return channel;
+    }
 }
 
 Trainer& Trainer::get() {
@@ -210,6 +260,8 @@ void Trainer::cycleStyle() {
 
 void Trainer::enterLevel(GJGameLevel* level) {
     m_level = level;
+    // so the first click doesn't wait on loading the file
+    clickSound();
     {
         // Per-level sections
         sections.clear();
@@ -432,6 +484,9 @@ void Trainer::onReset(int64_t tick, PlayLayer* pl) {
     }
 
     resetJudgements(tick);
+    // clicks already scheduled past a death would play after the respawn
+    cancelClickSounds();
+    m_soundTick = visualNow(tick);
 }
 
 void Trainer::onTick(int64_t tick, PlayLayer* pl) {
@@ -500,6 +555,7 @@ void Trainer::finishCapture(bool completed, int64_t tick) {
 }
 
 void Trainer::onDeath(int64_t tick) {
+    cancelClickSounds();
     if (capturing) finishCapture(false, tick);
 }
 
@@ -611,6 +667,41 @@ void Trainer::update(int64_t tick) {
         }
         return false;
     });
+
+    playClickSounds(tick);
+}
+
+// Clicks are scheduled a bit ahead on FMOD's mixer clock instead of being started when
+// the cue arrives: that removes the up-to-a-frame delay and the mixer's buffer latency.
+void Trainer::playClickSounds(int64_t tick) {
+    int64_t now = visualNow(tick);
+    double lead = mixLatency() + settings.clickOffsetMs / 1000.0;
+    // schedule everything due within the latency plus a few frames
+    int64_t horizon = now + static_cast<int64_t>((std::max(lead, 0.0) + .05) * kTicksPerSecond);
+    int64_t last = std::exchange(m_soundTick, horizon);
+    // big jumps (lag spikes, guide just turned on) skip instead of playing a burst of clicks
+    if (!settings.clickSound || horizon <= last || horizon - last > 240) return;
+
+    auto const& notes = chart.notes;
+    auto it = std::upper_bound(notes.begin(), notes.end(), last - settings.offsetTicks, [](int64_t v, Note const& n) {
+        return v < n.start;
+    });
+    int64_t prev = -1;
+    for (; it != notes.end() && chartToGame(it->start) <= horizon; ++it) {
+        if (!it->shown || it->start == prev) continue; // one sound for clicks on the same tick
+        prev = it->start;
+        double until = (chartToGame(it->start) - now) / kTicksPerSecond;
+        if (auto channel = playClick(settings.clickVolume, until - lead)) {
+            m_clickChannels.push_back(channel);
+        }
+    }
+    if (m_clickChannels.size() > 16) m_clickChannels.erase(m_clickChannels.begin(), m_clickChannels.end() - 16);
+}
+
+void Trainer::cancelClickSounds() {
+    // stale handles are safe: FMOD just returns an invalid-handle error
+    for (auto channel : m_clickChannels) channel->stop();
+    m_clickChannels.clear();
 }
 
 void Trainer::judge(Judgement j, int64_t diff) {

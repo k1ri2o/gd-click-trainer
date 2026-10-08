@@ -58,6 +58,10 @@ struct TrainerSettings {
     int holdThreshold = 24;
     bool showJudgements = true;
 
+    bool clickSound = true;
+    float clickVolume = 1.f; // 0..3, above 1 amplifies
+    int clickOffsetMs = 0;   // >0: the click plays earlier (output latency on top of FMOD's)
+
     static TrainerSettings load();
 };
 
@@ -178,8 +182,12 @@ private:
     size_t m_missCursor = 0;
     size_t m_captureIndex = 0;
     std::vector<size_t> m_pendingReleases;
+    int64_t m_soundTick = 0; // visual tick click sounds have been scheduled up to
+    std::vector<FMOD::Channel*> m_clickChannels;
 
     void judge(Judgement j, int64_t diff);
+    void playClickSounds(int64_t tick);
+    void cancelClickSounds();
     void resetJudgements(int64_t tick);
     void finishCapture(bool completed, int64_t tick);
 };

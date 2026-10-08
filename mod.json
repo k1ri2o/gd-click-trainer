@@ -353,7 +353,51 @@
 			"default": true,
 			"name": "Show Judgements",
 			"description": "Show PERFECT / GREAT / MISS etc. and your timing error."
+		},
+		"sound-title": {
+			"type": "title",
+			"name": "Sound"
+		},
+		"click-sound": {
+			"type": "bool",
+			"default": true,
+			"name": "Click Sound",
+			"description": "Plays a keyboard click at each of the chart's clicks, right when the cue hits, so you can click along with it. Follows <cy>Visual Offset</c>."
+		},
+		"click-volume": {
+			"type": "int",
+			"default": 100,
+			"min": 0,
+			"max": 300,
+			"name": "Click Sound Volume (%)",
+			"description": "Above 100% the click is amplified, and very high values can start to crackle.",
+			"control": {
+				"slider": true,
+				"slider-step": 5,
+				"input": true,
+				"arrows": true,
+				"arrow-step": 10
+			}
+		},
+		"click-offset": {
+			"type": "int",
+			"default": 0,
+			"min": -100,
+			"max": 150,
+			"name": "Click Sound Offset (ms)",
+			"description": "The game's audio delay is already compensated. If the click still sounds late (Bluetooth headphones, some sound cards), raise this; lower it if it sounds early.",
+			"control": {
+				"slider": true,
+				"slider-step": 5,
+				"input": true,
+				"arrows": true,
+				"arrow-step": 5
+			}
 		}
 	},
-	"resources": {}
+	"resources": {
+		"files": [
+			"resources/click.wav"
+		]
+	}
 }

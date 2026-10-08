@@ -57,6 +57,7 @@ Open them from the **gear icon** in the Clicks menu; changes apply immediately.
 
 - View, ring closing time, how many clicks ahead are shown, circle/gate sizes, release marker size
 - Opacity of trail, markers and rings; dark outline on/off; all colors
+- **Click sound**: a mechanical keyboard click at each of the chart's clicks, right when the cue hits, so you can click along by ear; on/off and volume
 - **Calibrate**: shifts the visuals by your average early/late so the cue matches when you actually click
 - Hotkeys: **Alt+C** guide on/off, **Alt+V** switch view
 
